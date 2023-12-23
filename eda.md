@@ -10,7 +10,7 @@
 9. [Average signal strength for each hour of each router](#average-signal-strength-for-each-hour-of-each-router)
 10. [How many times routers caught their "favorite" users](#how-many-times-routers-caught-their-favorite-users)
 11. [Which day was the busiest each week with the number of connections](#which-day-was-the-busiest-each-week-with-the-number-of-connections)
-12. [Statistics of caught unique users for each router in each hour of the day](#statistics-of-caught-unique-users-for-each-router-in-each-hour-of-the-day)
+12. [Statistics of caught unique users for specified router in each hour of the day](#statistics-of-caught-unique-users-for-specified-router-in-each-hour-of-the-day)
 13. [Number of movements for each week](#number-of-movements-for-each-week)
 14. [Identification of peak hours](#identification-of-peak-hours)
 15. [Identification of the most unloaded hours](#identification-of-the-most-unloaded-hours)
