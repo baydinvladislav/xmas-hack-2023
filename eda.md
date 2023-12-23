@@ -15,6 +15,7 @@
 14. [Identification of peak hours](#identification-of-peak-hours)
 15. [Identification of the most unloaded hours](#identification-of-the-most-unloaded-hours)
 16. [Routers with the most unfavorable positions](#routers-with-the-most-unfavorable-positions)
+17. [Get three key time intervals](#get-three-key-time-intervals)
 
 
 ## Total movements by hours/weeks within a time range
@@ -23,7 +24,7 @@ SELECT
     EXTRACT(WEEK FROM tm) AS week_number,
     COUNT(*) AS movement_count
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 WHERE
     EXTRACT(HOUR FROM tm) BETWEEN 6 AND 11
 GROUP BY
@@ -41,7 +42,7 @@ SELECT
     COUNT(CASE WHEN EXTRACT(HOUR FROM tm) BETWEEN 11 AND 17 THEN 1 END) AS movements_11_17,
     COUNT(CASE WHEN EXTRACT(HOUR FROM tm) BETWEEN 17 AND 23 THEN 1 END) AS movements_17_23
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 GROUP BY
     week_number
 ORDER BY
@@ -54,7 +55,7 @@ SELECT
     router_id,
     COUNT(*) AS connection_count
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 WHERE
     EXTRACT(HOUR FROM tm) = 9
 GROUP BY
@@ -70,7 +71,7 @@ SELECT
     EXTRACT(HOUR FROM tm) AS hour_of_day,
     COUNT(*) AS total_connections
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 GROUP BY
     hour_of_day
 ORDER BY
@@ -78,14 +79,14 @@ ORDER BY
 LIMIT 1;
 ```
 
-## Rating of the busiest hours by connections
+## Rating of the busiest hours by connections | used
 ```
 WITH HourlyConnectionCounts AS (
     SELECT
         EXTRACT(HOUR FROM tm) AS hour_of_day,
         COUNT(*) AS total_connections
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         hour_of_day
 )
@@ -97,14 +98,14 @@ FROM
     HourlyConnectionCounts;
 ```
 
-## Rating of the most moving users
+## Rating of the most moving users | unnecessary
 ```
 SELECT
     user_mac,
     COUNT(*) AS catch_count,
     RANK() OVER (ORDER BY COUNT(*) DESC) AS user_rank
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 GROUP BY
     user_mac
 ORDER BY
@@ -118,14 +119,14 @@ SELECT
     COUNT(DISTINCT user_mac) AS unique_users_count,
     RANK() OVER (ORDER BY COUNT(DISTINCT user_mac) DESC) AS router_rank
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 GROUP BY
     router_id
 ORDER BY
     unique_users_count DESC;
 ```
 
-## Which router caught the most users at a specific hour
+## Which router caught the most users at a specific hour - used
 ```
 WITH RouterUserCounts AS (
     SELECT
@@ -133,7 +134,7 @@ WITH RouterUserCounts AS (
         EXTRACT(HOUR FROM tm) AS hour_of_day,
         COUNT(DISTINCT user_mac) AS unique_users_count
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         router_id, hour_of_day
 )
@@ -150,7 +151,7 @@ ORDER BY
 LIMIT 1;
 ```
 
-## Average signal strength for each hour of each router
+## Average signal strength for each hour of each router - after
 ```
 SELECT
     router_id,
@@ -179,7 +180,7 @@ SELECT
     AVG(CASE WHEN EXTRACT(HOUR FROM tm) = 22 THEN signal END) AS signal_22,
     AVG(CASE WHEN EXTRACT(HOUR FROM tm) = 23 THEN signal END) AS signal_23
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 WHERE
     EXTRACT(HOUR FROM tm) BETWEEN 0 AND 23
 GROUP BY
@@ -196,7 +197,7 @@ WITH RouterUserCounts AS (
         user_mac,
         COUNT(*) AS catch_count
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         router_id, user_mac
 ),
@@ -230,7 +231,7 @@ WITH WeeklyTopDay AS (
         COUNT(*) AS connection_count,
         RANK() OVER (PARTITION BY EXTRACT(WEEK FROM tm) ORDER BY COUNT(*) DESC) AS day_rank
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         week_number, date
 )
@@ -253,7 +254,7 @@ SELECT
     EXTRACT(HOUR FROM tm) AS hour_of_day,
     COUNT(DISTINCT user_mac) AS unique_users_count
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 WHERE
     router_id = '090a6502-bfc4-4d39-bc94-b0519fee04d6'
 GROUP BY
@@ -268,7 +269,7 @@ SELECT
     EXTRACT(WEEK FROM tm) AS week_number,
     COUNT(*) AS movement_count
 FROM
-    wifi_logs_2023_04
+    wifi_logs
 GROUP BY
     week_number
 ORDER BY
@@ -277,13 +278,14 @@ ORDER BY
 
 ## Identification of peak hours
 ```
+-- top_loaded_hours_in_year_diagram.png
 WITH HourlyUserCounts AS (
     SELECT
         EXTRACT(HOUR FROM tm) AS hour_of_day,
         router_id,
         COUNT(DISTINCT user_mac) AS users_count
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         hour_of_day, router_id
 )
@@ -300,12 +302,13 @@ ORDER BY
 
 ## Identification of the most unloaded hours
 ```
+-- top_loaded_hours_in_year_diagram.png
 WITH HourlyUserCounts AS (
     SELECT
         EXTRACT(HOUR FROM tm) AS hour_of_day,
         COUNT(DISTINCT user_mac) AS users_count
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         hour_of_day
 )
@@ -328,7 +331,7 @@ WITH HourlyUserCounts AS (
         EXTRACT(HOUR FROM tm) AS hour_of_day,
         COUNT(DISTINCT user_mac) AS users_count
     FROM
-        wifi_logs_2023_04
+        wifi_logs
     GROUP BY
         hour_of_day
 )
@@ -341,4 +344,35 @@ GROUP BY
     hour_of_day
 ORDER BY
     avg_users_count ASC;
+```
 
+## Get three key time intervals
+```
+-- afternoon_hours_52_week_diagram.png
+-- evening_hours_52_week_diagram.png
+-- morning_hours_52_week_diagram.png
+WITH router_movement_counts AS (
+  SELECT
+    EXTRACT(WEEK FROM tm) AS week_number,
+    router_id,
+    COUNT(*) AS movement_count,
+    RANK() OVER (PARTITION BY EXTRACT(WEEK FROM tm) ORDER BY COUNT(*) DESC) AS rank_in_week
+  FROM
+    wifi_logs
+  WHERE
+    EXTRACT(HOUR FROM tm) BETWEEN 6 AND 11
+  GROUP BY
+    week_number, router_id
+)
+
+SELECT
+  week_number,
+  router_id,
+  movement_count
+FROM
+  router_movement_counts
+WHERE
+  rank_in_week = 1
+ORDER BY
+  movement_count DESC;
+```
