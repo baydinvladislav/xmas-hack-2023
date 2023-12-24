@@ -114,6 +114,7 @@ ORDER BY
 
 ## Rating of routers that caught the most users
 ```
+-- top_routers_in_year.csv
 SELECT
     router_id,
     COUNT(DISTINCT user_mac) AS unique_users_count,
@@ -153,6 +154,7 @@ LIMIT 1;
 
 ## Average signal strength for each hour of each router - after
 ```
+-- router_avg_year_signal_strenth.csv_by_hours.csv
 SELECT
     router_id,
     AVG(CASE WHEN EXTRACT(HOUR FROM tm) = 0 THEN signal END) AS signal_0,
